@@ -3,6 +3,23 @@
 import cv2
 import numpy as np
 
+# BGR
+LEFT_LINE_COLOR = (0, 0, 255)
+RIGHT_LINE_COLOR = (255, 0, 0)
+
+
+def draw_lane_lines(img, left_pts, right_pts, thickness):
+    cv2.polylines(img, [np.int32(left_pts)], False, LEFT_LINE_COLOR, thickness, cv2.LINE_AA)
+    cv2.polylines(img, [np.int32(right_pts)], False, RIGHT_LINE_COLOR, thickness, cv2.LINE_AA)
+
+
+def draw_birds_eye(birds_eye, ploty, left_fitx, right_fitx):
+    out_img = birds_eye.copy()
+    left_pts = np.transpose(np.vstack([left_fitx, ploty]))
+    right_pts = np.transpose(np.vstack([right_fitx, ploty]))
+    draw_lane_lines(out_img, left_pts, right_pts, 10)
+    return out_img
+
 
 def project_lane_info(img, binary_warped, ploty, left_fitx, right_fitx, M_inv, left_curverad, right_curverad, veh_pos):
     # Create an image to draw the lines on
@@ -22,6 +39,11 @@ def project_lane_info(img, binary_warped, ploty, left_fitx, right_fitx, M_inv, l
 
     # Combine the result with the original image
     out_img = cv2.addWeighted(img, 1, newwarp, 0.3, 0)
+
+    # Draw the detected lane lines, projected back to the image plane
+    left_line = cv2.perspectiveTransform(pts_left, M_inv)[0]
+    right_line = cv2.perspectiveTransform(pts_right, M_inv)[0]
+    draw_lane_lines(out_img, left_line, right_line, 6)
 
     cv2.putText(out_img, 'Curve Radius [m]: ' + str((left_curverad + right_curverad) / 2)[:7], (40, 70),
                 cv2.FONT_HERSHEY_COMPLEX_SMALL, 1.6, (255, 255, 255), 2, cv2.LINE_AA)

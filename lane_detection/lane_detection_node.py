@@ -12,6 +12,7 @@ from std_msgs.msg import Float64
 
 from .perspective import DEFAULT_ROI_FAR, DEFAULT_ROI_NEAR, DEFAULT_ROI_WIDTH, PerspectiveTransform
 from .pipeline import LaneFindingPipeline
+from .visualization import draw_birds_eye
 
 # Best effort matches both reliable and best effort camera publishers.
 IMAGE_QOS = QoSProfile(
@@ -25,6 +26,7 @@ PARAMETERS = [
     ('camera_info_topic', '/my/camera_info'),
     ('extrinsics_topic', '/my/camera_extrinsics'),
     ('output_image_topic', '/lane_detection/image'),
+    ('birds_eye_topic', '/lane_detection/birds_eye'),
     ('curve_radius_topic', '/lane_detection/curve_radius'),
     ('center_offset_topic', '/lane_detection/center_offset'),
     ('roi_width', DEFAULT_ROI_WIDTH),
@@ -47,6 +49,7 @@ class LaneDetectionNode(Node):
         self.pipeline = None
 
         self.image_pub = self.create_publisher(Image, self.get_parameter('output_image_topic').value, 1)
+        self.birds_eye_pub = self.create_publisher(Image, self.get_parameter('birds_eye_topic').value, 1)
         self.curve_radius_pub = self.create_publisher(Float64, self.get_parameter('curve_radius_topic').value, 10)
         self.center_offset_pub = self.create_publisher(Float64, self.get_parameter('center_offset_topic').value, 10)
 
@@ -133,18 +136,28 @@ class LaneDetectionNode(Node):
             if not self.setup_pipeline(img_size):
                 return
 
+        birds_eye, _ = self.pipeline.perspective.warp(img)
         try:
             detection = self.pipeline.detect(img)
         except (TypeError, ValueError, np.linalg.LinAlgError) as exc:
             # np.polyfit raises when a lane line has no pixels
             self.get_logger().warn(f'Lane lines not found: {exc}', throttle_duration_sec=2.0)
+            self.publish_image(self.birds_eye_pub, birds_eye, msg.header)
             return
 
-        out_msg = self.bridge.cv2_to_imgmsg(detection.overlay, encoding='bgr8')
-        out_msg.header = msg.header
-        self.image_pub.publish(out_msg)
+        self.publish_image(self.image_pub, detection.overlay, msg.header)
+        self.publish_image(
+            self.birds_eye_pub,
+            draw_birds_eye(birds_eye, detection.ploty, detection.left_fitx, detection.right_fitx),
+            msg.header,
+        )
         self.curve_radius_pub.publish(Float64(data=float((detection.left_curverad + detection.right_curverad) / 2)))
         self.center_offset_pub.publish(Float64(data=float(detection.veh_pos)))
+
+    def publish_image(self, publisher, img, header):
+        out_msg = self.bridge.cv2_to_imgmsg(img, encoding='bgr8')
+        out_msg.header = header
+        publisher.publish(out_msg)
 
 
 def main(args=None):

@@ -4,8 +4,10 @@ lane_detection:
     image_topic: '/zed/left_camera/image_raw'
     camera_info_topic: '/my/camera_info'
     extrinsics_topic: '/my/camera_extrinsics'
-    # outputs: image with the lane drawn, mean curve radius and centre offset in metres
+    # outputs: camera image and bird's eye view with the detected lines drawn,
+    # mean curve radius and centre offset in metres
     output_image_topic: '/lane_detection/image'
+    birds_eye_topic: '/lane_detection/birds_eye'
     curve_radius_topic: '/lane_detection/curve_radius'
     center_offset_topic: '/lane_detection/center_offset'
     # ground rectangle warped to the bird's eye view (metres): centred on the camera,

@@ -15,6 +15,9 @@ FIT_HISTORY_LENGTH = 10
 
 @dataclass
 class LaneDetection:
+    ploty: np.ndarray
+    left_fitx: np.ndarray
+    right_fitx: np.ndarray
     left_curverad: float
     right_curverad: float
     veh_pos: float
@@ -59,6 +62,9 @@ class LaneFindingPipeline:
                                     left_curverad, right_curverad, veh_pos)
 
         return LaneDetection(
+            ploty=ploty,
+            left_fitx=left_fitx,
+            right_fitx=right_fitx,
             left_curverad=left_curverad,
             right_curverad=right_curverad,
             veh_pos=veh_pos,
