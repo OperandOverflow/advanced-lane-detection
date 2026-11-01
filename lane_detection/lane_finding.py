@@ -1,7 +1,6 @@
 ### STEP 4: Detection of Lane Lines Using Histogram ###
 ### STEP 5: Detection of Lane Lines Based on Previous Step ###
 
-import cv2
 import numpy as np
 
 
@@ -118,31 +117,3 @@ def fit_poly(binary_warped, leftx, lefty, rightx, righty):
         right_fitx = 1 * ploty ** 2 + 1 * ploty
 
     return left_fit, right_fit, left_fitx, right_fitx, ploty
-
-
-def draw_poly_lines(binary_warped, left_fitx, right_fitx, ploty):
-    # Create an image to draw on and an image to show the selection window
-    out_img = np.dstack((binary_warped, binary_warped, binary_warped)) * 255
-    window_img = np.zeros_like(out_img)
-
-    margin = 100
-    # Generate a polygon to illustrate the search window area
-    # And recast the x and y points into usable format for cv2.fillPoly()
-    left_line_window1 = np.array([np.transpose(np.vstack([left_fitx - margin, ploty]))])
-    left_line_window2 = np.array([np.flipud(np.transpose(np.vstack([left_fitx + margin, ploty])))])
-    left_line_pts = np.hstack((left_line_window1, left_line_window2))
-    right_line_window1 = np.array([np.transpose(np.vstack([right_fitx - margin, ploty]))])
-    right_line_window2 = np.array([np.flipud(np.transpose(np.vstack([right_fitx + margin, ploty])))])
-    right_line_pts = np.hstack((right_line_window1, right_line_window2))
-
-    # Draw the lane onto the warped blank image
-    cv2.fillPoly(window_img, np.int_([left_line_pts]), (100, 100, 0))
-    cv2.fillPoly(window_img, np.int_([right_line_pts]), (100, 100, 0))
-    result = cv2.addWeighted(out_img, 1, window_img, 0.3, 0)
-
-    # Plot the polynomial lines onto the image (BGR: left green, right blue)
-    left_pts = np.int32(np.transpose(np.vstack([left_fitx, ploty])))
-    right_pts = np.int32(np.transpose(np.vstack([right_fitx, ploty])))
-    cv2.polylines(result, [left_pts], False, (0, 255, 0), 3)
-    cv2.polylines(result, [right_pts], False, (255, 0, 0), 3)
-    return result

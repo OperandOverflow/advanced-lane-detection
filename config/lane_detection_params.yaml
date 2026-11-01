@@ -1,0 +1,15 @@
+lane_detection:
+  ros__parameters:
+    # inputs: raw camera image, intrinsics (K and distortion) and extrinsics
+    image_topic: '/zed/left_camera/image_raw'
+    camera_info_topic: '/my/camera_info'
+    extrinsics_topic: '/my/camera_extrinsics'
+    # outputs: image with the lane drawn, mean curve radius and centre offset in metres
+    output_image_topic: '/lane_detection/image'
+    curve_radius_topic: '/lane_detection/curve_radius'
+    center_offset_topic: '/lane_detection/center_offset'
+    # ground rectangle warped to the bird's eye view (metres): centred on the camera,
+    # roi_width wide, from roi_near to roi_far ahead of it
+    roi_width: 3.7
+    roi_near: 3.0
+    roi_far: 33.0
